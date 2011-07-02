@@ -1,0 +1,3 @@
+#! /bin/sh
+
+cp repulsedelement.js /var/www/repulsedelement.js

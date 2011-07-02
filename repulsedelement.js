@@ -3,9 +3,181 @@
 
 (function($){
         
-    $.fn.psychoElement = function(options){
 
+    $.fn.repulsedElement = function(){
+
+	var top,left,velocity,mouseX=-1000,mouseY=-10000;
 	
+	var element = $(this);
+	var top = element.offset().top;
+	var left = element.offset().left;
+	var width = element.width();
+	var height = element.height();
+	var velocityX = 0;
+	var velocityY = 0;
+	var mouseX = -1000;
+	var mosueY = -1000;
+	var windowWidth = $(window).width();
+	var windowHeight = $(window).height();
+	var previousTime = new Date().getTime();
+
+
+	element.css("position","absolute");
+	element.css("min-width",element.width());
+
+	$("body").mousemove(function(e){
+
+		mouseX = e.pageX;
+		mouseY = e.pageY;
+
+	});
+	
+
+
+	// Private Functions
+	// Note: new copy every time this is applied to an element
+	// Probably could fix this
+
+	function getDistanceVector(){
+
+
+	    var centerX = left + element.width()/2;
+	    var centerY = top + element.height()/2;
+
+	    var x = 0;
+	    var y = 0;
+
+	    if(mouseX < left){
+		if(mouseX + (windowWidth-(left+width)) < left-mouseX){
+		    x = -1* (mouseX + (windowWidth-(left+width)));
+		} else {
+		    x = mouseX - left;
+		}
+	    } else if(mouseX > left + width){
+
+		if((windowWidth-mouseX)+left < mouseX-(left+width)){
+		    x = ((windowWidth-mouseX)+left);
+		} else {
+		    x = mouseX - (left + width);
+		}
+	    } else {
+		x = 0;
+	    }
+
+	    if(mouseY < top){
+		y = mouseY - top;
+	    } else if (mouseY > top + height){
+		y = mouseY - (top + height);
+	    } else {
+		y = 0;
+	    }
+
+	    return {
+		x: (mouseX - centerX),
+		    y: (mouseY - centerY),
+		    len: Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+		    };
+	    
+
+
+
+	};
+
+
+	function getAccelerationVector(distance){
+
+	    var absAcceleration = Math.min(.01/Math.pow(distance.len,2),20);
+
+  
+
+	    return {x: absAcceleration * distance.x * -1,
+		     y: absAcceleration * distance.y * -1
+		    };
+
+	};
+
+
+	function moveElement(){
+
+	    var distance = getDistanceVector();
+	    
+
+
+	    var a = getAccelerationVector(distance);
+
+
+
+	    var newTime = new Date().getTime();
+	    var timeSlice = newTime - previousTime;
+	    previousTime = newTime;
+
+	    //$("#jq-whosUsing").text("Framerate: {" + 1000.0/timeSlice+ "}");
+
+
+
+	    velocityX += a.x/timeSlice;
+	    velocityY += a.y/timeSlice;
+
+	    $("#jq-whosUsing").text("Accelration: {" + a.x + "," + a.y + "}");
+	    
+	    if(velocityX > 5){
+		velocityX = 5;
+	    }
+	    if(velocityX < -5){
+		velocityX = -5;
+	    }
+	    if(velocityY > 5){
+		velocityY = 5;
+	    }
+	    if(velocityY < -5){
+		velocityY = -5;
+	    }
+
+	    left+= velocityX/timeSlice;
+	    top+= velocityY/timeSlice;
+
+
+	    velocityX *= .9999;
+	    velocityY *=.9999;
+	    
+	    if(left > windowWidth){
+		left = -width;
+	    };
+	    if(left < -width){
+		left = windowWidth;
+	    };
+
+	    if(top>windowHeight){
+		top = -height;
+	    };
+
+	    if(top<-height){
+		top = windowHeight;
+	    };
+
+	    element.css("left",left);
+	    element.css("top",top);
+	    
+	    
+
+	};
+
+	function _loop(){
+
+	    moveElement();
+
+	    setTimeout(_loop,4);
+
+	};
+
+
+	setTimeout(_loop,500);
+
+    };
+
+    $.fn.repulsedElementAdvanced = function(){
+	
+
 	$(this).data('coords',{x:0.0,y:0.0,top:0.0,left:0.0});
 
 	var newelements = [];
@@ -85,7 +257,7 @@
 
 		
 		}
-		setTimeout(_loop,10);
+		setTimeout(_loop,0);
 		//$("#log").text("Button: " + newelements[0].data('coords').top + "-" + newelements[0].data('coords').left +  " Mouse: " + mouseCoords.top + "-" + mouseCoords.left + " Distance: " + _calculateDistance() + " Force: " + _force(_calculateDistance()));
  		
 	};
