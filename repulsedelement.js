@@ -17,9 +17,10 @@
 	var velocityY = 0;
 	var mouseX = -1000;
 	var mosueY = -1000;
-	var windowWidth = $(window).width();
-	var windowHeight = $(window).height();
+	var windowWidth = $(document).width();
+	var windowHeight = $(document).height();
 	var previousTime = new Date().getTime();
+	var elementBufferDistance = Math.sqrt(Math.pow(width/2,2) + Math.pow(height/2,2));
 
 
 	element.css("position","absolute");
@@ -48,15 +49,25 @@
 	    var y = 0;
 
 	    if(mouseX < left){
-		if(mouseX + (windowWidth-(left+width)) < left-mouseX){
-		    x = -1* (mouseX + (windowWidth-(left+width)));
+		if(mouseX + (windowWidth-(left+width)+width) < left-mouseX){
+		    // alert('should put button to the left');
+		    //		    centerX = (left + width/2)-width-windowWidth;
+		    //alert('new centerXa from ' + centerX + ' at left ' + left);
+		    centerX = mouseX-(mouseX+width+(windowWidth-left-width/2));
+
+		    x = mouseX- (centerX+ width/2);
+
 		} else {
 		    x = mouseX - left;
 		}
 	    } else if(mouseX > left + width){
 
-		if((windowWidth-mouseX)+left < mouseX-(left+width)){
-		    x = ((windowWidth-mouseX)+left);
+		if((windowWidth-mouseX)+left+width < mouseX-(left+width)){
+		    //		    alert('should put button to the right');
+
+		    centerX = mouseX+(left+width/2)+width+(windowWidth-mouseX);
+		    //		    alert('new centerXb ' + centerX + ' at left ' + left  );
+		    x = mouseX- (centerX- width/2);
 		} else {
 		    x = mouseX - (left + width);
 		}
@@ -65,13 +76,58 @@
 	    }
 
 	    if(mouseY < top){
-		y = mouseY - top;
+		if(mouseY + (windowHeight-(top+height)+height) < top-mouseY){
+		   
+		    centerY = mouseY - (mouseY+height+(windowHeight-top-height/2));
+		    y=mouseY-(centerY+height/2);
+		} else {
+		    y=mouseY-top;
+		}
+
 	    } else if (mouseY > top + height){
-		y = mouseY - (top + height);
+		
+		if((windowHeight-mouseY)+top+height < mouseY-(top+height)){
+		    centerY = mouseY+(top+height/2)+height+(windowHeight-mouseY);
+		    y=mouseY-(centerY-height/2);
+		} else {
+		    y=mouseY - (top+height);
+		}
 	    } else {
 		y = 0;
 	    }
 
+	    // normalize x and y
+
+
+	    /*
+	    if(Math.abs(x) > Math.abs(y)){
+		y = y / Math.abs(x);
+		x = x / Math.abs(x);
+
+		y = Math.min(y,.000000001);
+	    } else if(Math.abs(y) > Math.abs(x)) {
+		x = x / Math.abs(y);
+		y = y / Math.abs(y);
+	    } else if(y == 0){
+		x = 0;
+		y = 0;
+	    };
+		
+	    
+	    if(Math.abs(centerX) > Math.abs(centerY)){
+		centerY = centerY / Math.abs(centerX);
+		centerX = centerX / Math.abs(centerX);
+
+		centerY = Math.min(centerY,.000000001);
+	    } else if(Math.abs(centerY) > Math.abs(centerX)) {
+		centerX = centerX / Math.abs(centerY);
+		centerY = centerY / Math.abs(centerY);
+	    } else if(centerY == 0){
+		centerX = 0;
+		centerY = 0;
+	    };
+	    */
+	    //$("#jq-whosUsing").html("Position: {" + centerX + "," + centerY + "} <BR>Distance: {" + x + "," + y + "}");
 	    return {
 		x: (mouseX - centerX),
 		    y: (mouseY - centerY),
@@ -86,9 +142,10 @@
 
 	function getAccelerationVector(distance){
 
-	    var absAcceleration = Math.min(.01/Math.pow(distance.len,2),20);
+	    var absAcceleration = Math.min(.0005/Math.abs(Math.pow(distance.len,2)),50);
 
-  
+$("#jq-whosUsing").html("len: {" + distance.len +"}");
+	    
 
 	    return {x: absAcceleration * distance.x * -1,
 		     y: absAcceleration * distance.y * -1
@@ -118,7 +175,11 @@
 	    velocityX += a.x/timeSlice;
 	    velocityY += a.y/timeSlice;
 
-	    $("#jq-whosUsing").text("Accelration: {" + a.x + "," + a.y + "}");
+
+	    velocityX *=.999;
+	    velocityY *=.999;
+
+
 	    
 	    if(velocityX > 5){
 		velocityX = 5;
@@ -133,13 +194,12 @@
 		velocityY = -5;
 	    }
 
+	    //	    velocityX -= .01*velocityX/timeSlice;
+	    //velocityY -= .01*velocityY/timeSlice;
+
 	    left+= velocityX/timeSlice;
 	    top+= velocityY/timeSlice;
 
-
-	    velocityX *= .9999;
-	    velocityY *=.9999;
-	    
 	    if(left > windowWidth){
 		left = -width;
 	    };
