@@ -5,8 +5,6 @@
         
 
     $.fn.repulsedElement = function(){
-
-	var top,left,velocity,mouseX=-1000,mouseY=-10000;
 	
 	var element = $(this);
 	var top = element.offset().top;
@@ -23,8 +21,13 @@
 	var elementBufferDistance = Math.sqrt(Math.pow(width/2,2) + Math.pow(height/2,2));
 
 
+	// Set to absolute positioning and set a min-width to prevent from wrapping near edges (not the cleanest of solutions but appears to work 
+
 	element.css("position","absolute");
 	element.css("min-width",element.width());
+
+
+	// capture mouse movement, set to local variable
 
 	$("body").mousemove(function(e){
 
@@ -50,11 +53,8 @@
 
 	    if(mouseX < left){
 		if(mouseX + (windowWidth-(left+width)+width) < left-mouseX){
-		    // alert('should put button to the left');
-		    //		    centerX = (left + width/2)-width-windowWidth;
-		    //alert('new centerXa from ' + centerX + ' at left ' + left);
-		    centerX = mouseX-(mouseX+width+(windowWidth-left-width/2));
 
+		    centerX = mouseX-(mouseX+width+(windowWidth-left-width/2));
 		    x = mouseX- (centerX+ width/2);
 
 		} else {
@@ -63,10 +63,7 @@
 	    } else if(mouseX > left + width){
 
 		if((windowWidth-mouseX)+left+width < mouseX-(left+width)){
-		    //		    alert('should put button to the right');
-
 		    centerX = mouseX+(left+width/2)+width+(windowWidth-mouseX);
-		    //		    alert('new centerXb ' + centerX + ' at left ' + left  );
 		    x = mouseX- (centerX- width/2);
 		} else {
 		    x = mouseX - (left + width);
@@ -96,41 +93,26 @@
 		y = 0;
 	    }
 
-	    // normalize x and y
+	    var normalizedVectorX = mouseX - centerX;
+	    var normalizedVectorY = mouseY - centerY;
 
+	    if(Math.abs(normalizedVectorX) > Math.abs(normalizedVectorY)){
+		normalizedVectorY = normalizedVectorY / Math.abs(normalizedVectorX);
+		normalizedVectorX = normalizedVectorX / Math.abs(normalizedVectorX);
 
-	    /*
-	    if(Math.abs(x) > Math.abs(y)){
-		y = y / Math.abs(x);
-		x = x / Math.abs(x);
-
-		y = Math.min(y,.000000001);
-	    } else if(Math.abs(y) > Math.abs(x)) {
-		x = x / Math.abs(y);
-		y = y / Math.abs(y);
-	    } else if(y == 0){
-		x = 0;
-		y = 0;
+		centerY = Math.min(normalizedVectorY,.000000001);
+	    } else if(Math.abs(normalizedVectorY) > Math.abs(normalizedVectorX)) {
+		normalizedVectorX = normalizedVectorX / Math.abs(normalizedVectorY);
+		normalizedVectorY = normalizedVectorY / Math.abs(normalizedVectorY);
+	    } else if(normalizedVecotrY == 0){
+		normalizedVectorX = 0;
+		normalizedVectorY = 0;
 	    };
-		
 	    
-	    if(Math.abs(centerX) > Math.abs(centerY)){
-		centerY = centerY / Math.abs(centerX);
-		centerX = centerX / Math.abs(centerX);
-
-		centerY = Math.min(centerY,.000000001);
-	    } else if(Math.abs(centerY) > Math.abs(centerX)) {
-		centerX = centerX / Math.abs(centerY);
-		centerY = centerY / Math.abs(centerY);
-	    } else if(centerY == 0){
-		centerX = 0;
-		centerY = 0;
-	    };
-	    */
-	    //$("#jq-whosUsing").html("Position: {" + centerX + "," + centerY + "} <BR>Distance: {" + x + "," + y + "}");
+	    //$("#jq-whosUsing").html("NormalizedVector: {" + normalizedVectorX + "," + normalizedVectorY + "} <BR>Distance: {" + x + "," + y + "}");
 	    return {
-		x: (mouseX - centerX),
-		    y: (mouseY - centerY),
+		x: normalizedVectorX,
+		    y: normalizedVectorY,
 		    len: Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
 		    };
 	    
@@ -142,10 +124,10 @@
 
 	function getAccelerationVector(distance){
 
-	    var absAcceleration = Math.min(.0005/Math.abs(Math.pow(distance.len,2)),50);
+	    var absAcceleration = Math.min(1/Math.abs(Math.pow(distance.len,2)),50);
 
-$("#jq-whosUsing").html("len: {" + distance.len +"}");
 	    
+	    //$("#jq-whosUsing").html("len: {" + distance.len +"}<BR> absAcceleration: " + absAcceleration);
 
 	    return {x: absAcceleration * distance.x * -1,
 		     y: absAcceleration * distance.y * -1
@@ -172,33 +154,41 @@ $("#jq-whosUsing").html("len: {" + distance.len +"}");
 
 
 
-	    velocityX += a.x/timeSlice;
-	    velocityY += a.y/timeSlice;
+	    velocityX += a.x*timeSlice;
+	    velocityY += a.y*timeSlice;
+
+	    $("#jq-whosUsing").html("timeslice: " + timeSlice);
+
+	    //velocityX *=.995;
+	    //velocityY *=.995;
+
+	    velocityX *= (1-timeSlice/1000.0);
+	    velocityY *= (1-timeSlice/1000.0);
+
+	    //	    velocityX+=(-1*(velocityX/5))/timeSlice;
+	    //velocityY+=(-1*(velocityY/5))/timeSlice;
 
 
-	    velocityX *=.999;
-	    velocityY *=.999;
-
-
+	    	    
+	    if(velocityX > .5){
+		velocityX = .5;
+	    }
+	    if(velocityX < -.5){
+		velocityX = -.5;
+	    }
+	    if(velocityY > .5){
+		velocityY = .5;
+	    }
+	    if(velocityY < -.5){
+		velocityY = -.5;
+	    }
 	    
-	    if(velocityX > 5){
-		velocityX = 5;
-	    }
-	    if(velocityX < -5){
-		velocityX = -5;
-	    }
-	    if(velocityY > 5){
-		velocityY = 5;
-	    }
-	    if(velocityY < -5){
-		velocityY = -5;
-	    }
 
 	    //	    velocityX -= .01*velocityX/timeSlice;
 	    //velocityY -= .01*velocityY/timeSlice;
 
-	    left+= velocityX/timeSlice;
-	    top+= velocityY/timeSlice;
+	    left+= velocityX*timeSlice;
+	    top+= velocityY*timeSlice;
 
 	    if(left > windowWidth){
 		left = -width;
@@ -226,12 +216,12 @@ $("#jq-whosUsing").html("len: {" + distance.len +"}");
 
 	    moveElement();
 
-	    setTimeout(_loop,4);
+	    setTimeout(_loop,5);
 
 	};
 
 
-	setTimeout(_loop,500);
+	_loop();
 
     };
 
