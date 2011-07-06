@@ -1,0 +1,5 @@
+JQuery plugin that causes specified elements to be repulsed by the user's mouse (like 2 magnets with the same charge).  Can be applied to one or multiple elements on a page.
+
+Tested using jquery v1.6.2 in most recent versions of IE, Safari, Firefox (as of July 5 2011).
+
+See example.html for sample usage (example is a copy of www.jquery.com taken in July 2011).
